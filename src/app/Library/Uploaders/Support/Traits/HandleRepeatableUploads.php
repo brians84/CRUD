@@ -46,7 +46,23 @@ trait HandleRepeatableUploads
     protected function handleRepeatableFiles(Model $entry): Model
     {
         if ($this->isRelationship) {
-            return $this->processRelationshipRepeatableUploaders($entry);
+            //return $this->processRelationshipRepeatableUploaders($entry);
+
+            /* START BUGFIX / WORKAROUND FOR ISSUE UPLOADS MULTIPLE INSTANCES WITH SCOPES*/
+
+            $entry = $this->processRelationshipRepeatableUploaders($entry);
+
+            if ($entry->filepath) {
+                \DB::table('document')->where('id', $entry->id)->update(
+                [
+                    'filepath' => $entry->filepath,
+                    'uploaded_at' => date('Y-m-d'),
+                    'uploaded_by_users_id' => auth()->user()->id
+                ]);
+            }
+            return $entry;
+
+            /* END BUGFIX / WORKAROUND FOR ISSUE UPLOADS MULTIPLE INSTANCES WITH SCOPES*/
         }
 
         $values = collect(CRUD::getRequest()->get($this->getRepeatableContainerName()));

@@ -153,7 +153,18 @@ trait Create
                         $relationValues = array_values($values);
                     }
 
-                    $item->{$relationMethod}()->sync($relationValues);
+                    // START BUGFIX FOR: when scoping hasMany
+
+                    $oldRelationValues = $item->{$relationMethod}()->get()->pluck('id')->toArray();
+
+
+                    $item->{$relationMethod}()->detach($oldRelationValues);
+                    $item->{$relationMethod}()->attach($relationValues);
+
+                    //$item->{$relationMethod}()->sync($relationValues);
+
+                    // END BUGFIX FOR: when scoping hasMany
+                    
                     break;
             }
         }
